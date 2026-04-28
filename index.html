@@ -108,6 +108,10 @@
     </div>
 
     <script>
+        // CONFIGURATION: Set this to your Discord Bot's public IP and Port (e.g., "http://123.45.67.89:3000")
+        // Leave as empty string "" if hosting the website directly via the bot.
+        const API_BASE_URL = "http://localhost:3000";
+
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const paymentId = urlParams.get('id');
@@ -127,7 +131,7 @@
             if (!paymentId) return showError('Invalid Payment Link.');
 
             try {
-                const res = await fetch(`/api/payment?id=${paymentId}`);
+                const res = await fetch(`${API_BASE_URL}/api/payment?id=${paymentId}`);
                 const data = await res.json();
 
                 if (!res.ok) throw new Error(data.error || 'Failed to load details.');
@@ -183,7 +187,7 @@
                 btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>';
 
                 try {
-                    const res = await fetch('/api/verify', {
+                    const res = await fetch(`${API_BASE_URL}/api/verify`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: paymentId, trxId })
