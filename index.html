@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .glow {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')] bg-cover bg-center bg-fixed">
+    <div class="absolute inset-0 bg-slate-900/80"></div>
+
+    <div id="app" class="relative z-10 w-full max-w-md">
+        <!-- Loading State -->
+        <div id="loading" class="glass rounded-2xl p-8 text-center glow">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-400 mx-auto mb-4"></div>
+            <p class="text-slate-300">Loading payment details...</p>
+        </div>
+
+        <!-- Payment Interface -->
+        <div id="payment-box" class="glass rounded-2xl p-8 shadow-2xl hidden transition-all duration-500 transform translate-y-4 opacity-0 glow">
+            <div class="text-center mb-6">
+                <img id="method-logo" src="" alt="Payment Method" class="h-12 mx-auto mb-4 object-contain hidden" />
+                <h1 class="text-2xl font-bold gradient-text mb-1">Checkout</h1>
+                <p class="text-sm text-slate-400">Complete your payment securely</p>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div class="flex justify-between items-center py-3 border-b border-slate-700/50">
+                    <span class="text-slate-400">Amount</span>
+                    <span id="amount-text" class="text-xl font-bold text-white"></span>
+                </div>
+                <div class="flex justify-between items-center py-3 border-b border-slate-700/50">
+                    <span class="text-slate-400">Method</span>
+                    <span id="method-text" class="font-medium text-sky-400"></span>
+                </div>
+                <div class="flex justify-between items-center py-3 border-b border-slate-700/50">
+                    <span class="text-slate-400">User</span>
+                    <span id="user-text" class="font-medium"></span>
+                </div>
+                <div id="reason-container" class="py-3 border-b border-slate-700/50">
+                    <span class="text-slate-400 block text-sm mb-1">Reason</span>
+                    <span id="reason-text" class="text-sm text-slate-300"></span>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/50 rounded-xl p-4 mb-6 border border-slate-700">
+                <p class="text-sm text-slate-300 font-medium mb-2 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Instructions
+                </p>
+                <p id="instructions-text" class="text-sm text-slate-400"></p>
+            </div>
+
+            <form id="verify-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-1">Transaction ID (TrxID)</label>
+                    <input type="text" id="trx-input" required placeholder="Enter the transaction ID after payment" class="w-full bg-slate-900/50 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all">
+                </div>
+                <button type="submit" id="submit-btn" class="w-full btn-gradient text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center">
+                    <span>Verify Payment</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Success State -->
+        <div id="success-box" class="glass rounded-2xl p-8 text-center hidden glow">
+            <div class="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">Verification Submitted!</h2>
+            <p class="text-slate-400 text-sm" id="success-message">Your payment has been verified! Redirecting you back to Discord...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-box" class="glass rounded-2xl p-8 text-center hidden border-red-500/30">
+            <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </div>
+            <h2 id="error-title" class="text-2xl font-bold text-white mb-2">Error</h2>
+            <p id="error-message" class="text-slate-400 text-sm"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const paymentId = urlParams.get('id');
+
+            const loading = document.getElementById('loading');
+            const paymentBox = document.getElementById('payment-box');
+            const successBox = document.getElementById('success-box');
+            const errorBox = document.getElementById('error-box');
+
+            function showError(msg) {
+                loading.classList.add('hidden');
+                paymentBox.classList.add('hidden');
+                errorBox.classList.remove('hidden');
+                document.getElementById('error-message').innerText = msg;
+            }
+
+            if (!paymentId) return showError('Invalid Payment Link.');
+
+            try {
+                const res = await fetch(`/api/payment?id=${paymentId}`);
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || 'Failed to load details.');
+
+                if (data.status === 'verified') {
+                    return showError('This payment has already been verified.');
+                }
+                if (data.status === 'cancelled') {
+                    return showError('This payment request was cancelled.');
+                }
+
+                // Populate data
+                document.getElementById('amount-text').innerText = `${data.amount} ${data.currency}`;
+                document.getElementById('method-text').innerText = data.method;
+                document.getElementById('user-text').innerText = data.user;
+                
+                if (data.reason && data.reason !== 'None') {
+                    document.getElementById('reason-text').innerText = data.reason;
+                } else {
+                    document.getElementById('reason-container').classList.add('hidden');
+                }
+
+                document.getElementById('instructions-text').innerText = data.instructions;
+
+                if (data.logo) {
+                    const logo = document.getElementById('method-logo');
+                    logo.src = data.logo;
+                    logo.classList.remove('hidden');
+                }
+
+                // Show interface
+                loading.classList.add('hidden');
+                paymentBox.classList.remove('hidden');
+                
+                // Animation trigger
+                setTimeout(() => {
+                    paymentBox.classList.remove('opacity-0', 'translate-y-4');
+                }, 50);
+
+            } catch (err) {
+                showError(err.message);
+            }
+
+            // Handle submission
+            document.getElementById('verify-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const trxId = document.getElementById('trx-input').value.trim();
+                const btn = document.getElementById('submit-btn');
+                
+                if (!trxId) return;
+
+                btn.disabled = true;
+                btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>';
+
+                try {
+                    const res = await fetch('/api/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: paymentId, trxId })
+                    });
+                    
+                    const result = await res.json();
+                    
+                    if (!res.ok) throw new Error(result.error || 'Failed to verify');
+
+                    paymentBox.classList.add('hidden');
+                    successBox.classList.remove('hidden');
+
+                    if (result.discordUrl) {
+                        setTimeout(() => {
+                            window.location.href = result.discordUrl;
+                        }, 2500); // Redirect after 2.5s
+                    }
+                    
+                } catch (err) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Verify Payment</span>';
+                    alert('Error: ' + err.message);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
