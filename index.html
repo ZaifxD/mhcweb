@@ -108,9 +108,8 @@
     </div>
 
     <script>
-        // CONFIGURATION: Set this to your Discord Bot's public IP and Port (e.g., "http://123.45.67.89:3000")
-        // Leave as empty string "" if hosting the website directly via the bot.
-        const API_BASE_URL = "http://localhost:3000";
+        // Since we are hosting on Vercel with Serverless functions, the API is on the same domain!
+        const API_BASE_URL = "";
 
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -132,7 +131,12 @@
 
             try {
                 const res = await fetch(`${API_BASE_URL}/api/payment?id=${paymentId}`);
-                const data = await res.json();
+                let data;
+                try {
+                    data = await res.json();
+                } catch (parseError) {
+                    throw new Error("Could not connect to the Discord Bot API. Please ensure API_BASE_URL is correctly set to the Bot's IP/Domain.");
+                }
 
                 if (!res.ok) throw new Error(data.error || 'Failed to load details.');
 
@@ -193,7 +197,12 @@
                         body: JSON.stringify({ id: paymentId, trxId })
                     });
                     
-                    const result = await res.json();
+                    let result;
+                    try {
+                        result = await res.json();
+                    } catch (parseError) {
+                        throw new Error("Could not connect to the Discord Bot API. Please ensure API_BASE_URL is correctly set.");
+                    }
                     
                     if (!res.ok) throw new Error(result.error || 'Failed to verify');
 

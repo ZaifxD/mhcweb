@@ -1,0 +1,8 @@
+{
+  "name": "payment-vercel-api",
+  "version": "1.0.0",
+  "dependencies": {
+    "mongoose": "^8.3.0",
+    "discord.js": "^14.14.1"
+  }
+}
