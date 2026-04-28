@@ -29,6 +29,18 @@ export default async function handler(req, res) {
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: 'Missing payment ID' });
 
+    // Mock Test Data for UI Testing
+    if (id === 'TEST') {
+        return res.status(200).json({
+            status: 'pending',
+            amount: 150,
+            currency: 'USD',
+            method: 'PayPal',
+            user: 'TestUser#1234',
+            reason: 'Premium Subscription (Test Demo)'
+        });
+    }
+
     try {
         await connectToDatabase();
         const Payment = mongoose.models.Payment || mongoose.model('Payment', PaymentSchema);
